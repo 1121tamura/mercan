@@ -1,0 +1,28 @@
+{
+  "name": "mercan",
+  "dockerComposeFile": "docker-compose.yml",
+  "service": "app",
+  "workspaceFolder": "/workspace",
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "anthropic.claude-code",
+        "GitHub.copilot",
+        "ms-python.python",
+        "ms-python.mypy-type-checker",
+        "charliermarsh.ruff",
+        "ms-python.black-formatter",
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode"
+      ],
+      "settings": {
+        "python.defaultInterpreterPath": "/usr/local/bin/python3"
+      }
+    }
+  },
+
+  "forwardPorts": [8000, 5173],
+
+  "postCreateCommand": "cd /workspace/frontend && npm install"
+}

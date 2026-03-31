@@ -1,0 +1,13 @@
+version: "3.8"
+
+services:
+  app:
+    build: .
+    volumes:
+      - ..:/workspace:cached
+    working_dir: /workspace
+    command: sleep infinity
+    ports:
+      - "8000:8000"
+      - "5173:5173"
+    # Node.js 20 is installed via postCreateCommand (see setup.sh)
