@@ -161,6 +161,17 @@ Domain Layer        → エンティティ・値オブジェクト・リポジ�
 Infrastructure Layer→ SQLite実装・外部サービス連携
 ```
 
+### 責務の線引き
+
+- Presentation: HTTP入出力のみを担当（ルーティング、リクエスト/レスポンス変換）
+- Application: ユースケースの調停を担当（トランザクション境界、処理フロー制御）
+- Domain: ビジネスルールを担当（エンティティ、値オブジェクト、ドメインサービス）
+- Infrastructure Repository: DBアクセスと Domain↔ORM マッピングを担当
+
+補足:
+- ORMモデル（SQLAlchemy）は Infrastructure 層に配置する
+- Domain層は外部ライブラリ非依存を維持する
+
 ---
 
 ## データモデル（主要エンティティ）
