@@ -21,6 +21,7 @@ Claude Codeへの引き継ぎ用ドキュメント。
 - 確定申告データ出力（freee / 弥生 CSV形式）
 
 ### フェーズ2（将来検討）
+- ヤフオク・その他プラットフォームへの対応拡張
 - 時間指定・条件指定の一斉値下げ機能
 
 ---
@@ -144,13 +145,36 @@ domain/
 │   ├── Money              # 金額（円）
 │   ├── SaleDate           # 売却日
 │   ├── FiscalYear         # 会計年度
-│   └── ItemName           # 商品名
+│   ├── ItemName           # 商品名
+│   └── Platform           # プラットフォーム識別子（MERCARI / YAHOO_AUCTION / ...）
 └── repositories/          # インターフェースのみ（実装はinfrastructure層）
     ├── ISalesRecordRepository
     ├── IInventoryItemRepository
     ├── IExpenseRepository
     └── ITaxReportRepository
 ```
+
+### マルチプラットフォーム対応設計方針
+
+取得元を増やせるよう、Infrastructure層にプロバイダー抽象化を設ける。
+
+```
+infrastructure/
+└── providers/
+    ├── IMarketplaceProvider    # 取得インターフェース（domain層に定義）
+    ├── MercariProvider         # メルカリ実装
+    └── YahooAuctionProvider    # ヤフオク実装（フェーズ2）
+```
+
+**IMarketplaceProvider が持つ責務：**
+- 売却済みデータの取得（差分・全件）
+- 出品中データの取得
+
+**Platformの役割：**
+- どのプラットフォーム由来のデータかをエンティティに保持する
+- 手数料率など、プラットフォームごとの差異はProviderが吸収する
+  - メルカリ：販売価格の10%
+  - ヤフオク：落札システム利用料（8.8% + 振込手数料 等）
 
 ### レイヤー構成
 
@@ -168,10 +192,11 @@ Infrastructure Layer→ SQLite実装・外部サービス連携
 ### SalesRecord（売却済み販売記録）
 ```
 - id
-- mercari_item_id   # メルカリ側のID（重複防止のキー）
+- platform          # プラットフォーム（MERCARI / YAHOO_AUCTION / ...）
+- platform_item_id  # 各プラットフォーム側のID（重複防止のキー）
 - item_name         # 商品名
 - sold_price        # 販売価格
-- fee               # メルカリ手数料（10%）
+- fee               # 手数料（プラットフォームごとに計算）
 - profit            # 販売利益
 - sold_at           # 売却日（確定申告の基準日）
 - fetched_at        # 取得日時（差分管理用）
@@ -180,7 +205,8 @@ Infrastructure Layer→ SQLite実装・外部サービス連携
 ### InventoryItem（在庫）
 ```
 - id
-- mercari_item_id
+- platform          # プラットフォーム（MERCARI / YAHOO_AUCTION / ...）
+- platform_item_id  # 各プラットフォーム側のID
 - item_name
 - purchase_price    # 仕入れ価格
 - listed_at         # 出品日
@@ -220,21 +246,28 @@ Infrastructure Layer→ SQLite実装・外部サービス連携
 
 ---
 
-## メルカリデータ取得方式
+## データ取得方式
 
 ### 採用方式：Chrome拡張 × 内部APIアクセス
 
-メルカリ個人アカウントには公式CSV出力機能がないため、
+各プラットフォームに公式CSV出力機能がないため、
 自前のChrome拡張機能（Chrome Web Store配布）を使いデータを取得する。
 
-#### 取得フロー
+#### 取得フロー（共通）
 
 ```
-① ユーザーがメルカリにログイン済みの状態で拡張のボタンを押す
-② 拡張がメルカリ内部APIに100件ずつリクエスト（1〜2秒インターバル）
-③ 全件まとめてJSONファイルをローカルに保存
+① ユーザーが対象プラットフォームにログイン済みの状態で拡張のボタンを押す
+② 拡張が内部APIに100件ずつリクエスト（1〜2秒インターバル）
+③ 全件まとめてJSONファイルをローカルに保存（platformフィールド付き）
 ④ ElectronアプリがJSONを読み込みSQLiteに保存
 ```
+
+#### プラットフォーム別の対応状況
+
+| プラットフォーム | フェーズ | 手数料率 |
+|---|---|---|
+| メルカリ | フェーズ1 | 販売価格の10% |
+| ヤフオク | フェーズ2 | 落札システム利用料8.8% 等 |
 
 #### 初回 vs 差分取得
 

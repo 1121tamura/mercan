@@ -7,3 +7,6 @@ RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
 RUN pip install uv
 
 ENV UV_SYSTEM_PYTHON=1
+
+COPY backend/pyproject.toml /workspace/backend/pyproject.toml
+RUN uv pip install --system /workspace/backend
