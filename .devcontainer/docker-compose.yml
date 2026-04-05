@@ -9,6 +9,8 @@ services:
     command: sleep infinity
     volumes:
       - ..:/workspace:cached
+      # claudeの履歴保持のためのボリュームマウント
+      - ~/.claude:/root/.claude
     ports:
       - "8000:8000"
       - "5173:5173"

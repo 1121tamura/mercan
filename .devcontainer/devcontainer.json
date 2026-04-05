@@ -8,6 +8,7 @@
     "vscode": {
       "extensions": [
         "anthropic.claude-code",
+        "openai.codex",
         "GitHub.copilot",
         "ms-python.python",
         "ms-python.mypy-type-checker",

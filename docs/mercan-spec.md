@@ -185,6 +185,25 @@ Domain Layer        → エンティティ・値オブジェクト・リポジ�
 Infrastructure Layer→ SQLite実装・外部サービス連携
 ```
 
+### FastAPIのルーティング設計方針
+
+`main.py` はFastAPIのルール上の入り口ではなく、uvicornの起動コマンドで指定するモジュール名が入り口になる慣習。
+
+```bash
+uvicorn main:app  # main.py の app を起動（慣習）
+```
+
+DRFとの対比：
+
+| DRF | FastAPI |
+|---|---|
+| `wsgi.py`（アプリ初期化） | `main.py`（アプリ初期化） |
+| ルートの `urls.py`（ルーター登録） | `main.py`（`include_router` 登録） |
+| アプリごとの `urls.py` | `presentation/routers/` 配下の各ファイル |
+
+- `main.py` = DRFの `wsgi.py` + ルートの `urls.py` を1ファイルに合体させたもの
+- 機能ごとに `APIRouter` を作成し `main.py` で `include_router()` して登録する
+
 ---
 
 ## データモデル（主要エンティティ）
